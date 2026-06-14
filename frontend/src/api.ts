@@ -1,47 +1,50 @@
+import { SecurityEvent, User } from "./types";
+
 const API_URL = "http://localhost:3001";
 
-export async function login(email: string, password: string) {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
+// All requests send the session cookie (HttpOnly, set by the backend on login).
+// No token is stored in JS — the cookie is the only credential.
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
+    ...options,
+  });
+
+  const isJson = res.headers.get("content-type")?.includes("application/json");
+  const data = isJson ? await res.json() : null;
+
+  if (!res.ok) {
+    const message =
+      (data && (data.error || data.message)) || `Request failed (${res.status})`;
+    throw new Error(message);
+  }
+  return data as T;
+}
+
+export function login(email: string, password: string): Promise<{ user: User }> {
+  return request("/api/auth/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  const data = await res.json();
-  localStorage.setItem("token", data.token);
-  return data;
 }
 
-export async function getEvents() {
-  const token = localStorage.getItem("token");
-  const res = await fetch(`${API_URL}/api/events`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return res.json();
+export function getEvents(): Promise<SecurityEvent[]> {
+  return request("/api/events");
 }
 
-export async function getUsers() {
-  const token = localStorage.getItem("token");
-  const res = await fetch(`${API_URL}/api/users`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return res.json();
+export function getUsers(): Promise<User[]> {
+  return request("/api/users");
 }
 
-export async function createUser(user: { email: string; password: string; role: string }) {
-  const token = localStorage.getItem("token");
-  const res = await fetch(`${API_URL}/api/users`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(user),
-  });
-  return res.json();
+export function createUser(user: {
+  email: string;
+  password: string;
+  role: string;
+}): Promise<User> {
+  return request("/api/users", { method: "POST", body: JSON.stringify(user) });
 }
 
-export async function deleteUser(id: string) {
-  const token = localStorage.getItem("token");
-  const res = await fetch(`${API_URL}/api/users/${id}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return res.json();
+export function deleteUser(id: string): Promise<{ message: string }> {
+  return request(`/api/users/${id}`, { method: "DELETE" });
 }

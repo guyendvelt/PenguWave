@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { login } from "../api";
 
 interface LoginModalProps {
   onClose: () => void;
@@ -7,25 +8,24 @@ interface LoginModalProps {
 export default function LoginModal({ onClose }: LoginModalProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Try to call backend (will fail if no backend running)
-    fetch("http://localhost:3001/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        localStorage.setItem("token", data.token);
-      })
-      .catch(() => {
-        // Backend not running — just close the modal
-      });
-
-    onClose();
+    setError(null);
+    setSubmitting(true);
+    try {
+      // On success the backend sets the HttpOnly session cookie.
+      await login(email, password);
+      onClose();
+      // Reload so authenticated views (events/users) fetch with the new session.
+      window.location.reload();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -57,8 +57,18 @@ export default function LoginModal({ onClose }: LoginModalProps) {
               placeholder="••••••••"
             />
           </div>
-          <button type="submit" className="btn-primary" style={{ width: "100%" }}>
-            Sign In
+          {error && (
+            <p style={{ color: "red", marginBottom: 12, fontSize: 14 }} role="alert">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            className="btn-primary"
+            style={{ width: "100%" }}
+            disabled={submitting}
+          >
+            {submitting ? "Signing in…" : "Sign In"}
           </button>
         </form>
       </div>

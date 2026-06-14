@@ -1,19 +1,41 @@
-import { useState } from "react";
-import mockEvents from "../../data/mock_events.json";
+import { useEffect, useState } from "react";
+import { getEvents } from "../api";
 import { SecurityEvent } from "../types";
 
 export default function EventsPage() {
+  const [events, setEvents] = useState<SecurityEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState("ALL");
   const [selectedEvent, setSelectedEvent] = useState<SecurityEvent | null>(null);
 
-  const events = mockEvents as SecurityEvent[];
+  useEffect(() => {
+    let active = true;
+    getEvents()
+      .then((data) => {
+        if (active) {
+          setEvents(data);
+          setError(null);
+        }
+      })
+      .catch((err: unknown) => {
+        if (active) setError(err instanceof Error ? err.message : "Failed to load events");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const filtered = events.filter((e) => {
+    const q = search.toLowerCase();
     const matchesSearch =
-      e.title.toLowerCase().includes(search.toLowerCase()) ||
-      e.description.toLowerCase().includes(search.toLowerCase()) ||
-      e.assetHostname.toLowerCase().includes(search.toLowerCase());
+      e.title.toLowerCase().includes(q) ||
+      (e.description ?? "").toLowerCase().includes(q) ||
+      (e.assetHostname ?? "").toLowerCase().includes(q);
     const matchesSeverity = severityFilter === "ALL" || e.severity === severityFilter;
     return matchesSearch && matchesSeverity;
   });
@@ -29,6 +51,13 @@ export default function EventsPage() {
   return (
     <div className="page-container">
       <h1>Security Events</h1>
+
+      {loading && <p style={{ color: "#666" }}>Loading events…</p>}
+      {error && (
+        <p style={{ color: "red" }} role="alert">
+          {error}
+        </p>
+      )}
 
       <div style={{ marginBottom: 16, display: "flex", gap: 12, alignItems: "center" }}>
         <input
@@ -92,7 +121,9 @@ export default function EventsPage() {
         </tbody>
       </table>
 
-      {filtered.length === 0 && <p style={{ color: "#999" }}>No events found.</p>}
+      {!loading && !error && filtered.length === 0 && (
+        <p style={{ color: "#999" }}>No events found.</p>
+      )}
 
       <div style={{ marginTop: 12 }}>
         <button

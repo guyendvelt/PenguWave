@@ -6,6 +6,7 @@ mock data is intentionally dropped — it is not part of the contract's event sh
 and both roles can read all events (ADR-4). Tags are stored as a Postgres array.
 """
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy import Column, String
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -18,14 +19,17 @@ SEVERITIES = ("CRITICAL", "HIGH", "MEDIUM", "LOW")
 class Event(SQLModel, table=True):
     __tablename__ = "events"
 
+    # Core identity fields are required.
     id: str = Field(primary_key=True)
     timestamp: datetime
     severity: str
     title: str
-    description: str
-    asset_hostname: str
-    asset_ip: str
-    source_ip: str
+    # Non-core fields are nullable: real-world events may arrive incomplete and we
+    # preserve them as-is rather than dropping or inventing data.
+    description: Optional[str] = None
+    asset_hostname: Optional[str] = None
+    asset_ip: Optional[str] = None
+    source_ip: Optional[str] = None
     tags: list[str] = Field(
         default_factory=list,
         sa_column=Column(ARRAY(String), nullable=False, server_default="{}"),
