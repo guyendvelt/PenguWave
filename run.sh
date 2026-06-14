@@ -39,6 +39,18 @@ if [[ ! -d "$FRONTEND/node_modules" ]]; then
   (cd "$FRONTEND" && npm install)
 fi
 
+# Fail clearly if a port is already taken (otherwise a server dies silently).
+check_port() {
+  local port="$1" name="$2"
+  if lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1; then
+    err "Port $port ($name) is already in use — is the project already running?"
+    err "Free it first, e.g.:  lsof -ti tcp:$port | xargs kill"
+    exit 1
+  fi
+}
+check_port "$BACKEND_PORT" backend
+check_port "$FRONTEND_PORT" frontend
+
 # --- Cleanup on exit ---------------------------------------------------------
 PIDS=()
 cleanup() {
