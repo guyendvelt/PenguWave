@@ -1,0 +1,10 @@
+# Runtime dependencies for the PenguWave backend.
+fastapi>=0.115
+uvicorn[standard]>=0.34
+pydantic-settings>=2.7
+pydantic[email]>=2.9
+sqlmodel>=0.0.22
+psycopg2-binary>=2.9
+# Auth (ADR-3): JWT + bcrypt password hashing.
+PyJWT>=2.9
+bcrypt>=4.1
