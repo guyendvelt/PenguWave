@@ -37,6 +37,7 @@ pnpm-debug.log*
 *.MD
 !README.md
 !**/README.md
+!plan.md
 
 # Python (backend)
 __pycache__/
