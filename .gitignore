@@ -31,6 +31,13 @@ pnpm-debug.log*
 *.sln
 *.sw?
 
+# Internal docs — keep out of the public repo. READMEs are allowed.
+# (Covers CLAUDE.MD, plan.md, ASSIGNMENT.md, .planning notes, etc.)
+*.md
+*.MD
+!README.md
+!**/README.md
+
 # Python (backend)
 __pycache__/
 *.py[cod]
