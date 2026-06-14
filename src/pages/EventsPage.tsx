@@ -1,7 +1,6 @@
 import { useState } from "react";
 import mockEvents from "../../data/mock_events.json";
 import { SecurityEvent } from "../types";
-import { sanitizeHtml } from "../utils";
 
 export default function EventsPage() {
   const [search, setSearch] = useState("");
@@ -20,9 +19,11 @@ export default function EventsPage() {
   });
 
   const severityColor = (s: string) => {
+    if (s === "CRITICAL") return "#8b0000";
     if (s === "HIGH") return "red";
     if (s === "MEDIUM") return "orange";
-    return "green";
+    if (s === "LOW") return "green";
+    return "#666";
   };
 
   return (
@@ -43,6 +44,7 @@ export default function EventsPage() {
           style={{ width: 140 }}
         >
           <option value="ALL">All Severities</option>
+          <option value="CRITICAL">Critical</option>
           <option value="HIGH">High</option>
           <option value="MEDIUM">Medium</option>
           <option value="LOW">Low</option>
@@ -51,12 +53,7 @@ export default function EventsPage() {
 
       {search && (
         <p>
-          <span
-            dangerouslySetInnerHTML={{
-              __html: sanitizeHtml("Showing results for: <strong>" + search + "</strong>"),
-            }}
-          />
-          {" "}({filtered.length} events)
+          Showing results for: <strong>{search}</strong> ({filtered.length} events)
         </p>
       )}
 
@@ -132,12 +129,7 @@ export default function EventsPage() {
           <p>
             <strong>Description:</strong>
           </p>
-          {/* render rich text descriptions */}
-          <div
-            ref={(el) => {
-              if (el) el.innerHTML = sanitizeHtml(selectedEvent.description);
-            }}
-          />
+          <p style={{ whiteSpace: "pre-wrap" }}>{selectedEvent.description}</p>
           <p>
             <strong>Asset:</strong> {selectedEvent.assetHostname} ({selectedEvent.assetIp})
           </p>

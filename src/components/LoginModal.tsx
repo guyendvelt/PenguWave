@@ -10,7 +10,6 @@ export default function LoginModal({ onClose }: LoginModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login:", email, password);
 
     // Try to call backend (will fail if no backend running)
     fetch("http://localhost:3001/api/auth/login", {
