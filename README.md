@@ -2,22 +2,47 @@
 
 A security operations portal for monitoring security events across your infrastructure.
 
-This is a **frontend-only** starter app with mock data and an API contract. It's the starting point for the bootcamp task.
+The project is split into two packages: a React frontend and a FastAPI backend
+(Track A). Architecture decisions are recorded in [`plan.md`](./plan.md); the task
+brief is in [`ASSIGNMENT.md`](./ASSIGNMENT.md).
 
-> **Your task is in [`ASSIGNMENT.md`](./ASSIGNMENT.md).** Read it first.
+## Layout
+
+```
+PenguWave/
+├── frontend/   # React + Vite + TypeScript app
+├── backend/    # FastAPI backend (Python) — see backend/README.md
+└── docs/       # API contract
+```
 
 ## Getting started
 
+### Frontend
+
 ```bash
+cd frontend
 npm install
-npm run dev
+npm run dev      # http://localhost:5173
 ```
 
-The frontend runs at http://localhost:5173. You'll see a login modal, an events table, and a users management page. The app works standalone with mock data, so explore it before you start building.
+The frontend currently runs on mock data (`frontend/data/mock_events.json`). It
+will be wired to the backend in a later step.
+
+### Backend
+
+See [`backend/README.md`](./backend/README.md) for full setup. In short:
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+cp .env.example .env          # never commit .env
+uvicorn app.main:app --reload --port 3001   # http://localhost:3001
+```
 
 ## What's included
 
 - React + Vite + TypeScript frontend (3 pages)
-- Realistic mock security events (`data/mock_events.json`)
+- FastAPI backend scaffold (`/health`; domain endpoints in progress)
+- Realistic mock security events (`frontend/data/mock_events.json`)
 - API endpoint contract (`docs/api_contract.md`)
-- No backend (building one is Track A)
